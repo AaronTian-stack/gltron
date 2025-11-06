@@ -805,6 +805,10 @@ void drawWorld(Camera *pCamera)
 		drawWalls();
 	}
 
+	if (gSettingsCache.show_recognizer) {
+		drawRecognizer();
+	}
+
 	// setupLights(eCycles);
 	// drawPlayers sets up its own lighting
 	nebu_Video_CheckErrors("before players");
