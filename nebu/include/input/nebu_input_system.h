@@ -86,6 +86,7 @@ void nebu_Input_Grab(void);
 void nebu_Input_HidePointer(void);
 void nebu_Input_UnhidePointer(void);
 void nebu_Input_Ungrab(void);
+void nebu_Input_SetRelativeMouseMode(int enabled);
 
 int nebu_Input_GetKeyState(int key);
 

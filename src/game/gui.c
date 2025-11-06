@@ -178,6 +178,10 @@ void keyboardGui(int state, int key, int x, int y) {
 
 void initGui(void)
 {
+	// Release mouse capture when entering menu
+	nebu_Input_UnhidePointer();
+	nebu_Input_SetRelativeMouseMode(0);
+	
 	gui_LoadResources();
 	updateSettingsCache();
 }

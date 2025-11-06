@@ -4,10 +4,7 @@
 #include "video/nebu_video_system.h"
 #include "scripting/nebu_scripting.h"
 
-#include "base/nebu_system.h"
-#include <SDL.h>
 #include <errno.h>
-#include <stdio.h>
 
 #include "base/nebu_debug_memory.h"
 
@@ -75,11 +72,11 @@ void nebu_Input_Init(void) {
 }
 
 void nebu_Input_Grab(void) {
-	//SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 
 void nebu_Input_Ungrab(void) {
-	//SDL_WM_GrabInput(SDL_GRAB_OFF);
+	SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 
 void nebu_Input_HidePointer(void) {
@@ -88,6 +85,14 @@ void nebu_Input_HidePointer(void) {
 
 void nebu_Input_UnhidePointer(void) {
 	SDL_ShowCursor(SDL_ENABLE);
+}
+
+void nebu_Input_SetRelativeMouseMode(int enabled) {
+	if (enabled) {
+		SDL_WM_GrabInput(SDL_GRAB_ON);
+	} else {
+		SDL_WM_GrabInput(SDL_GRAB_OFF);
+	}
 }
 
 void SystemMouse(int buttons, int state, int x, int y) {

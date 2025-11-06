@@ -36,6 +36,7 @@ void enterGame(void) { /* called when game mode is entered */
 	updateSettingsCache();
 
 	nebu_Input_HidePointer();
+	nebu_Input_SetRelativeMouseMode(1);
 	nebu_Input_Mouse_WarpToOrigin();
 	game2->time.offset = nebu_Time_GetElapsed() - game2->time.current;
 	Audio_EnableEngine();
@@ -52,6 +53,8 @@ void enterGame(void) { /* called when game mode is entered */
 }
 
 void exitGame(void) {
+  nebu_Input_SetRelativeMouseMode(0);
+  nebu_Input_UnhidePointer();
   Audio_DisableEngine();
   /* fprintf(stderr, "exit game\n"); */
 }
