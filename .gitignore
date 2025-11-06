@@ -1,3 +1,4 @@
+# Autotools generated files
 .deps
 Makefile
 Makefile.in
@@ -12,3 +13,57 @@ configure
 depcomp
 install-sh
 missing
+
+# Visual Studio build directories
+Debug/
+Release/
+x64/
+x86/
+.vs/
+
+# Visual Studio temporary files
+*.obj
+*.pdb
+*.idb
+*.ilk
+*.log
+*.tlog/
+*.exe.recipe
+*.vcxproj.FileListAbsolute.txt
+
+# Visual Studio user files
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.db
+*.ipch
+
+# Build output directories
+bin/
+lib/
+
+# Compiled executables
+*.exe
+*.dll
+*.lib
+*.exp
+
+# Backup and temporary files
+Backup/
+UpgradeLog.htm
+*.tmp
+*.bak
+*~
+
+# Debug output files
+scripting.txt
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

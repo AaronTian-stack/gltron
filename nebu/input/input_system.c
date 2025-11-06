@@ -5,8 +5,9 @@
 #include "scripting/nebu_scripting.h"
 
 #include "base/nebu_system.h"
-#include "SDL_stdinc.h"
+#include <SDL.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "base/nebu_debug_memory.h"
 

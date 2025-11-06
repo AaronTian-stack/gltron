@@ -31,7 +31,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <SDL_video.h>
+#include <GL/wglew.h>
 /*
  * Define glewGetContext and related helper macros.
  */
@@ -86,6 +86,7 @@ void* NSGLGetProcAddress (const GLubyte *name)
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstddef>
 
 void* dlGetProcAddress (const GLubyte* name)
 {

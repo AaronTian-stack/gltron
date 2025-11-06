@@ -3,6 +3,7 @@
   Copyright (C) 1999 by Andreas Umbach <marvin@dataway.ch>
 */
 #include "base/nebu_system.h" // includes main
+#include "sdl_fix.h" // fix SDL main redefinition
 #include "game/init.h"
 #include "filesystem/path.h"
 #include "base/util.h"

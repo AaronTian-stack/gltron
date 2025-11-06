@@ -6,8 +6,7 @@
 
 #include "base/nebu_debug_memory.h"
 
-static SDL_Window *window;
-static SDL_GLContext context;
+static SDL_Surface *screen;
 static int width = 0;
 static int height = 0;
 static int bitdepth = 0;
@@ -92,19 +91,17 @@ void SystemSetGamma(float red, float green, float blue) {
 
 void createWindow(const char *name)
 {
-  if( (window = SDL_CreateWindow(name, 0, 0, width, height,
-                              SDL_WINDOW_OPENGL |
-                              ((flags & SYSTEM_FULLSCREEN) ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0))) == NULL ) {
+  Uint32 sdl_flags = SDL_OPENGL;
+  if (flags & SYSTEM_FULLSCREEN)
+    sdl_flags |= SDL_FULLSCREEN;
+  screen = SDL_SetVideoMode(width, height, bitdepth, sdl_flags);
+  if (screen == NULL) {
     fprintf(stderr, "[system] Couldn't set GL mode: %s\n", SDL_GetError());
     nebu_assert(0); exit(1); /* OK: critical, no visual */
   }
+  SDL_WM_SetCaption(name, name);
   window_id = 1;
-	if ((context = SDL_GL_CreateContext(window)) == NULL)
-	{
-		fprintf(stderr, "[system] Couldn't create GL context: %s\n", SDL_GetError());
-		nebu_assert(0); exit(1); /* OK: critical, no visual */
-	}
-        SDL_GL_SetSwapInterval(1);
+  // SDL_GL_SetSwapInterval(1); // Not available in SDL 1.2
 }
 
 void nebu_Video_GetDisplayDepth(int *r, int *g, int *b, int *a)
@@ -183,5 +180,5 @@ void nebu_Video_CheckErrors(const char *where) {
 }
 
 void nebu_Video_SwapBuffers(void) {
-	SDL_GL_SwapWindow(window);
+	SDL_GL_SwapBuffers();
 }
