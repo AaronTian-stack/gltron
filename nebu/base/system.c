@@ -14,7 +14,7 @@ Callbacks default_callbacks;
 static int return_code = -1;
 static int redisplay = 0;
 static int idle = 1;
-static int fps_last = 0;
+static unsigned int fps_last = 0;
 static int fps_dt = 1;
 
 // TODO: move argv stuff to its own argv.c
@@ -93,10 +93,10 @@ int nebu_Time_GetTimeForLastFrame()
 
 unsigned int nebu_Time_GetElapsed() {
 	/* fprintf(stderr, "%d\n", SDL_GetTicks()); */
-	return SDL_GetTicks();
+	return (unsigned int)SDL_GetTicks();
 }
 
-static int lastFrame = 0;
+static unsigned int lastFrame = 0;
 void nebu_Time_SetCurrentFrameTime(unsigned t) {
 	lastFrame = t;
 }
@@ -120,17 +120,18 @@ int nebu_System_MainLoop() {
 	while(return_code == -1) {
 		while(SDL_PollEvent(&event)) {
 			switch(event.type) {
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-			case SDL_JOYAXISMOTION:
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-			case SDL_MOUSEBUTTONUP:
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEMOTION:
+			case SDL_EVENT_KEY_DOWN:
+			case SDL_EVENT_KEY_UP:
+			case SDL_EVENT_JOYSTICK_AXIS_MOTION:
+			case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+			case SDL_EVENT_JOYSTICK_BUTTON_UP:
+			case SDL_EVENT_MOUSE_BUTTON_UP:
+			case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			case SDL_EVENT_MOUSE_MOTION:
 				nebu_Intern_HandleInput(&event);
 			break;
-			case SDL_QUIT:
+			case SDL_EVENT_QUIT:
+			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 				nebu_System_Exit(); // shut down
 				nebu_System_ExitLoop(0); // exit mainloop
 			break;
@@ -172,7 +173,7 @@ void nebu_System_PostRedisplay() {
 extern void nebu_Video_SwapBuffers(void); // HACK
 
 void nebu_System_SwapBuffers() {
-	int now = nebu_Time_GetElapsed();
+	unsigned int now = nebu_Time_GetElapsed();
 	fps_dt = now - fps_last;
 	fps_last = now;
 	nebu_Time_SetCurrentFrameTime(now);

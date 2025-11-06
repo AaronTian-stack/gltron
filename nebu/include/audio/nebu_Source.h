@@ -35,6 +35,7 @@ namespace Sound {
     virtual int GetType(void);
     void SetName(const char *name);
     const char* GetName(void);
+    System* GetSystem() { return _system; };
 
   protected:
     virtual void Reset();

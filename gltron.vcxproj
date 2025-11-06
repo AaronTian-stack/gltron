@@ -57,7 +57,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>src/include;lua5/include;nebu/include;glew/include;win32/include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+  <AdditionalIncludeDirectories>src/include;lua5/include;nebu/include;glew/include;SDL3-3.2.4/include;SDL3-3.2.4/include/SDL3;win32/png_include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;RC_NAME="gltron.ini";PREF_DIR=".";SNAP_DIR="";DATA_DIR="";LOCAL_DATA="";SEPARATOR=%27\\%27;WIN32;VERSION="0.63alpha1";SEPERATOR=%27\\%27;NO_SDL_GLUE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -79,10 +79,10 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386 /SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>opengl32.lib;sdl.lib;libpng.lib;zlib.lib;sdl_sound.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL3.lib;libpng.lib;zlib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/gltron.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>win32/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>SDL3-3.2.4/lib/x86;win32/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug/gltron.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -91,9 +91,11 @@
       </DataExecutionPrevention>
     </Link>
     <PostBuildEvent>
-      <Command>copy Debug\gltron.exe bin\gltron-debug.exe
-copy win32\dll\*.dll Debug\
-copy win32\dll\*.dll bin\</Command>
+      <Command>copy /Y Debug\gltron.exe bin\gltron-debug.exe
+if exist SDL3-3.2.4\lib\x86\SDL3.dll copy /Y SDL3-3.2.4\lib\x86\SDL3.dll Debug\
+if exist SDL3-3.2.4\lib\x86\SDL3.dll copy /Y SDL3-3.2.4\lib\x86\SDL3.dll bin\
+for %%f in (libpng.dll zlib.dll) do if exist win32\dll\%%f copy /Y win32\dll\%%f Debug\
+for %%f in (libpng.dll zlib.dll) do if exist win32\dll\%%f copy /Y win32\dll\%%f bin\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,7 +108,7 @@ copy win32\dll\*.dll bin\</Command>
     </Midl>
     <ClCompile>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>src/include;lua5/include;nebu/include;glew/include;win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+  <AdditionalIncludeDirectories>src/include;lua5/include;nebu/include;glew/include;SDL3-3.2.4/include;SDL3-3.2.4/include/SDL3;win32/png_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;RC_NAME="gltron.ini";PREF_DIR=".";SNAP_DIR="";DATA_DIR="";LOCAL_DATA="";SEPARATOR=%27\\%27;VERSION="0.71-beta";SEPERATOR=%27\\%27;NO_SDL_GLUE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -126,7 +128,8 @@ copy win32\dll\*.dll bin\</Command>
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386 /SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>opengl32.lib;sdl.lib;libpng.lib;zlib.lib;sdl_sound.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL3.lib;libpng.lib;zlib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>SDL3-3.2.4/lib/x86;win32/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>.\Release\gltron.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\Release/gltron.pdb</ProgramDatabaseFile>
@@ -136,9 +139,13 @@ copy win32\dll\*.dll bin\</Command>
       </DataExecutionPrevention>
     </Link>
     <PostBuildEvent>
-      <Command>copy Release\gltron.exe bin\gltron.exe
-copy win32\dll\*.dll Release\
-copy win32\dll\*.dll bin\</Command>
+      <Command>copy /Y Release\gltron.exe bin\gltron.exe
+if exist SDL3-3.2.4\lib\x86\SDL3.dll copy /Y SDL3-3.2.4\lib\x86\SDL3.dll Release\
+if exist SDL3-3.2.4\lib\x86\SDL3.dll copy /Y SDL3-3.2.4\lib\x86\SDL3.dll bin\
+if exist SDL3-3.2.4\lib\x86\SDL3.dll copy /Y SDL3-3.2.4\lib\x86\SDL3.dll Release\
+if exist SDL3-3.2.4\lib\x86\SDL3.dll copy /Y SDL3-3.2.4\lib\x86\SDL3.dll bin\
+for %%f in (libpng.dll zlib.dll) do if exist win32\dll\%%f copy /Y win32\dll\%%f Release\
+for %%f in (libpng.dll zlib.dll) do if exist win32\dll\%%f copy /Y win32\dll\%%f bin\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

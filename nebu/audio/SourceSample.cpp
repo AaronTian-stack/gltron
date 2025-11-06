@@ -24,6 +24,7 @@ namespace Sound {
   }
 
   void SourceSample::Load(char *filename) {
+#if 0
 #define BUFSIZE 1024 * 1024
     SDL_RWops *rwops;
 
@@ -48,9 +49,11 @@ namespace Sound {
     
     // fprintf(stderr, "done decoding sample '%s'\n", filename);
     _position = 0;
+#endif
   }
 
   int SourceSample::Mix(Uint8 *data, int len) {
+#if 0
     if(_buffer == NULL)
       return 0;
 
@@ -77,6 +80,7 @@ namespace Sound {
 	_isPlaying = 0;
       }
     }
+#endif
     return 1;
   }
 }

@@ -17,17 +17,17 @@ namespace Sound {
 
   protected:
     virtual void Reset(void) { 
-      if(_sample != NULL) {
-				CleanUp();
-				CreateSample();
-				// fprintf(stderr, "sample resetted\n");
-      };
+    //  if(_sample != NULL) {
+				//CleanUp();
+				//CreateSample();
+				//// fprintf(stderr, "sample resetted\n");
+    //  };
     };
     void CleanUp(void);
     void CreateSample(void);
 
   private:
-    Sound_Sample* _sample;
+    //Sound_Sample* _sample;
 		int _sample_buffersize;
 		
 		Uint8* _buffer;

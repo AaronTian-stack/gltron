@@ -13,6 +13,8 @@
 extern void SystemReshapeFunc(void(*reshape)(int, int));
 extern void SystemSetGamma(float r, float g, float b);
 
+struct SDL_Window;
+
 void nebu_Video_Init(void); // test ok
 
 void nebu_Video_SetWindowMode(int x, int y, int w, int h); // test ok
@@ -21,6 +23,7 @@ void nebu_Video_GetDisplayDepth(int *r, int *g, int *b, int *a);
 int nebu_Video_Create(char *name); // test ok
 void nebu_Video_Destroy(int id); // test ok
 void nebu_Video_GetDimension(int *x, int *y);
+struct SDL_Window* nebu_Video_GetSDLWindow(void);
 
 void nebu_Video_WarpPointer(int x, int y);
 void nebu_Video_CheckErrors(const char *where);

@@ -3,7 +3,7 @@
 
 #include <png.h>
 #include "base/nebu_system.h"
-
+#include <SDL3/SDL_surface.h>
 #include "base/nebu_debug_memory.h"
 
 // review: 64bit ok
@@ -74,28 +74,21 @@ int nebu_Surface_SaveBMP(nebu_Surface *pSurface, const char *filename)
 	pixels = (unsigned char*) pSurface->data;
 
 	{
-		/* this code is shamelessly stolen from Ray Kelm, but I believe he
-			put it in the public domain */
-		SDL_Surface *temp;
-		int i;
-
-		temp = SDL_CreateRGBSurface(SDL_SWSURFACE, x, y, 24,
-		#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-						0x000000FF, 0x0000FF00, 0x00FF0000, 0
-		#else
-						0x00FF0000, 0x0000FF00, 0x000000FF, 0
-		#endif
-						);
-
+		/* create a 24-bit RGB surface compatible with SDL3 */
+		SDL_Surface *temp = SDL_CreateSurface(x, y, SDL_PIXELFORMAT_RGB24);
 		if (temp == NULL)
 			return -1;
 
-		for (i = 0; i < y; i++)
-			memcpy(((char *) temp->pixels) + temp->pitch * i, 
-			pixels + 3 * x * (y - i - 1), x * 3);
+		for (int i = 0; i < y; i++) {
+			memcpy(((Uint8 *)temp->pixels) + temp->pitch * i,
+				pixels + 3 * x * (y - i - 1), x * 3);
+		}
 
-		SDL_SaveBMP(temp, filename);
-		SDL_FreeSurface(temp);
+		if(!SDL_SaveBMP(temp, filename)) {
+			SDL_DestroySurface(temp);
+			return -1;
+		}
+		SDL_DestroySurface(temp);
 	}
 	return 0;
 }

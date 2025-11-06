@@ -9,8 +9,9 @@ namespace Sound {
 SourceMusic::SourceMusic(System *system) { 
 	_system = system;
 
+#if 0
 	_sample = NULL;
-
+#endif
 	_sample_buffersize = 8192;
 	_buffersize = 20 * _sample_buffersize;
 	_buffer = new Uint8[_buffersize];
@@ -33,12 +34,12 @@ SourceMusic::~SourceMusic()
 #endif
 	if(_buffer)
 		delete _buffer;
-	
+#if 0
 	if(_sample) {
 		Sound_FreeSample( _sample );
 		_sample = NULL;
 	}
-
+#endif
 	if(_filename)
 		delete _filename;
 
@@ -63,6 +64,7 @@ void SourceMusic::CreateSample(void) {
 		if(*(_filename + i) == '.')
 			ext = _filename + i + 1;
 	}
+#if 0
 	_sample = Sound_NewSample(_rwops, ext,
 		_system->GetAudioInfo(),
 		_sample_buffersize );
@@ -72,7 +74,7 @@ void SourceMusic::CreateSample(void) {
 			_filename, Sound_GetError());
 		return;
 	}
-
+#endif
     _read = 0;
     _decoded = 0;
     // fprintf(stderr, "created sample\n");
@@ -86,16 +88,18 @@ void SourceMusic::Load(char *filename) {
 }
 
   void SourceMusic::CleanUp(void) {
+#if 0
 		_read = 0;
     _decoded = 0;
-
     if(_sample != NULL) {
       Sound_FreeSample(_sample);
 			_sample = NULL;
 		}
+#endif
   }
 
   int SourceMusic::Mix(Uint8 *data, int len) {
+#if 0
     if(_sample == NULL) return 0;
 #ifndef macintosh
 		if( SDL_SemTryWait(_sem) ) {
@@ -133,10 +137,12 @@ void SourceMusic::Load(char *filename) {
 #ifndef macintosh
 		SDL_SemPost(_sem);
 #endif
+#endif
     return 1;
   }
 
 	void SourceMusic::Idle(void) {
+#if 0
 		if(_sample == NULL)
 			return;
 		
@@ -190,5 +196,6 @@ void SourceMusic::Load(char *filename) {
 #endif
 			}
 		} // buffer has been filled
+#endif
 	}
 }

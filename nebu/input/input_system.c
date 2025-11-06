@@ -5,6 +5,10 @@
 #include "scripting/nebu_scripting.h"
 
 #include <errno.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "base/nebu_debug_memory.h"
 
@@ -13,6 +17,12 @@ static int mouse_x = -1;
 static int mouse_y = -1;
 static int mouse_rel_x = 0;
 static int mouse_rel_y = 0;
+
+#define MAX_SUPPORTED_JOYSTICKS 4
+
+static SDL_Joystick *open_joysticks[MAX_SUPPORTED_JOYSTICKS];
+static SDL_JoystickID open_joystick_ids[MAX_SUPPORTED_JOYSTICKS];
+static int open_joystick_count = 0;
 
 enum { eMaxKeyState = 1024 };
 static int keyState[eMaxKeyState];
@@ -23,48 +33,78 @@ static void setKeyState(int key, int state)
 		keyState[key] = state;
 }
 
+static int findJoystickIndex(SDL_JoystickID instance_id)
+{
+	for(int i = 0; i < open_joystick_count; i++) {
+		if(open_joystick_ids[i] == instance_id)
+			return i;
+	}
+	return -1;
+}
+
 void nebu_Input_Init(void) {
 	int i;
 
 	/* keyboard */
-	//SDL_EnableKeyRepeat(0, 0); /* turn keyrepeat off */
-  
+	/* SDL3 handles key repeat configuration through events; nothing to do here. */
+
 	/* joystick */
-	if(SDL_Init(SDL_INIT_JOYSTICK) >= 0) {
-		SDL_Joystick *joy;
-		int joysticks = SDL_NumJoysticks();
-		
+	if(!(SDL_WasInit(SDL_INIT_JOYSTICK) & SDL_INIT_JOYSTICK)) {
+		if(!SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD)) {
+			const char *s = SDL_GetError();
+			fprintf(stderr, "[init] couldn't initialize joysticks: %s\n", s);
+		}
+	}
+
+	memset(open_joysticks, 0, sizeof(open_joysticks));
+	memset(open_joystick_ids, 0, sizeof(open_joystick_ids));
+	open_joystick_count = 0;
+
+	if(SDL_WasInit(SDL_INIT_JOYSTICK) & SDL_INIT_JOYSTICK) {
+		int joysticks = 0;
+		SDL_JoystickID *joystick_ids = SDL_GetJoysticks(&joysticks);
+
 		/* FIXME: why only two joysticks? */
-		/* joystick, currently at most 2 */
-		int max_joy=2; /* default... override by setting NEBU_MAX_JOY */
-		char *NEBU_MAX_JOY=getenv("NEBU_MAX_JOY");
-		
+		int max_joy = 2; /* default... override by setting NEBU_MAX_JOY */
+		char *NEBU_MAX_JOY = getenv("NEBU_MAX_JOY");
 		if(NEBU_MAX_JOY)
 		{
 			int n;
 			char *endptr;
-			errno=0;
-			n=strtol(NEBU_MAX_JOY, &endptr, 10);
-			if(n<0)
-				n=0;
-			if(n>4)
-				n=4; /* this is the max we can handle! */
+			errno = 0;
+			n = strtol(NEBU_MAX_JOY, &endptr, 10);
+			if(n < 0)
+				n = 0;
+			if(n > MAX_SUPPORTED_JOYSTICKS)
+				n = MAX_SUPPORTED_JOYSTICKS; /* this is the max we can handle! */
 			if(!*endptr && !errno)
-				max_joy=n;
+				max_joy = n;
 		}
-		
+
 		if(joysticks > max_joy)
 			joysticks = max_joy;
-		
-		for(i = 0; i < joysticks; i++) {
-			joy = SDL_JoystickOpen(i);
+		if(joysticks > MAX_SUPPORTED_JOYSTICKS)
+			joysticks = MAX_SUPPORTED_JOYSTICKS;
+
+		if(joystick_ids) {
+			for(i = 0; i < joysticks; i++) {
+				SDL_Joystick *joy = SDL_OpenJoystick(joystick_ids[i]);
+				if(joy) {
+					open_joysticks[open_joystick_count] = joy;
+					open_joystick_ids[open_joystick_count] = SDL_GetJoystickID(joy);
+					open_joystick_count++;
+				}
+			}
+			SDL_free(joystick_ids);
 		}
-		if(i)
-			SDL_JoystickEventState(SDL_ENABLE);
+
+		if(open_joystick_count > 0)
+			SDL_SetJoystickEventsEnabled(true);
 	} else {
 		const char *s = SDL_GetError();
-		fprintf(stderr, "[init] couldn't initialize joysticks: %s\n", s);
+		fprintf(stderr, "[init] joystick subsystem not available: %s\n", s);
 	}
+
 	for(i = 0; i < eMaxKeyState; i++)
 	{
 		keyState[i] = NEBU_INPUT_KEYSTATE_UP;
@@ -72,26 +112,30 @@ void nebu_Input_Init(void) {
 }
 
 void nebu_Input_Grab(void) {
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_Window *window = nebu_Video_GetSDLWindow();
+	if(window)
+		(void)SDL_SetWindowMouseGrab(window, true);
 }
 
 void nebu_Input_Ungrab(void) {
-	SDL_WM_GrabInput(SDL_GRAB_OFF);
+	SDL_Window *window = nebu_Video_GetSDLWindow();
+	if(window)
+		(void)SDL_SetWindowMouseGrab(window, false);
 }
 
 void nebu_Input_HidePointer(void) {
-	SDL_ShowCursor(SDL_DISABLE);
+	SDL_HideCursor();
 }
 
 void nebu_Input_UnhidePointer(void) {
-	SDL_ShowCursor(SDL_ENABLE);
+	SDL_ShowCursor();
 }
 
 void nebu_Input_SetRelativeMouseMode(int enabled) {
-	if (enabled) {
-		SDL_WM_GrabInput(SDL_GRAB_ON);
-	} else {
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
+	SDL_Window *window = nebu_Video_GetSDLWindow();
+	if(window) {
+		SDL_SetWindowRelativeMouseMode(window, enabled ? true : false);
+		(void)SDL_SetWindowMouseGrab(window, enabled ? true : false);
 	}
 }
 
@@ -145,118 +189,83 @@ const char* nebu_Input_GetKeyname(int key) {
 }  
 
 void nebu_Intern_HandleInput(SDL_Event *event) {
-	const char *keyname;
 	int key, state;
-	// int skip_axis_event = 0;
-	static int joy_axis_state[2] = { 0, 0 };
-	static int joy_lastaxis[2] = { 0, 0 };
+	static int joy_axis_state[MAX_SUPPORTED_JOYSTICKS] = { 0 };
+	static int joy_lastaxis[MAX_SUPPORTED_JOYSTICKS] = { 0 };
 
 	switch(event->type) {
-	case SDL_KEYDOWN:
-	case SDL_KEYUP:
-		if(event->type == SDL_KEYDOWN) {
-			state = NEBU_INPUT_KEYSTATE_DOWN;
-		} else {
-			state = NEBU_INPUT_KEYSTATE_UP;
-		}
- 
-		keyname = SDL_GetKeyName(event->key.keysym.sym);
-		key = 0;
-		switch(event->key.keysym.sym) {
-		case SDLK_SPACE: key = ' '; break;
-		case SDLK_ESCAPE: key = 27; break;
-		case SDLK_RETURN: key = 13; break;
-		default:
-			if(keyname[1] == 0) key = keyname[0];
-			break;
-		}
-		/* check: is that translation necessary? */
-		setKeyState(key, state);
-		if(current && current->keyboard)
-			current->keyboard(state, key ? key : event->key.keysym.sym, 0, 0);
-		break;
-	case SDL_JOYAXISMOTION:
-		if( abs(event->jaxis.value) <= joystick_threshold * SYSTEM_JOY_AXIS_MAX) {
-			// axis returned to origin, only generate event if it was set before
-			if(joy_axis_state[event->jaxis.which] & (1 << event->jaxis.axis)) {
-				joy_axis_state[event->jaxis.which] &= ~ 
-					(1 << event->jaxis.axis); // clear axis
-				key = SYSTEM_JOY_LEFT + event->jaxis.which * SYSTEM_JOY_OFFSET;
-				if(event->jaxis.axis == 1) {
-					key += 2;
-				}
-				if(joy_lastaxis[event->jaxis.which] & (1 << event->jaxis.axis)) {
-					key++;
-				}
-				setKeyState(key, NEBU_INPUT_KEYSTATE_UP);
-				if(current && current->keyboard)
-					current->keyboard(NEBU_INPUT_KEYSTATE_UP, key, 0, 0);
-			} else {
-				// do nothing
-			}
-		} else {
-			// axis set, only generate event if it wasn't set before
-			if(! (joy_axis_state[event->jaxis.which] & (1 << event->jaxis.axis)) ) {
-				joy_axis_state[event->jaxis.which] |= (1 << event->jaxis.axis);
-				key = SYSTEM_JOY_LEFT + event->jaxis.which * SYSTEM_JOY_OFFSET;
-				if(event->jaxis.axis == 1) {
-					key += 2;
-				}
-				if(event->jaxis.value > 0) {
-					key++;
-					joy_lastaxis[event->jaxis.which] |= (1 << event->jaxis.axis);
-				} else {
-					joy_lastaxis[event->jaxis.which] &= ~(1 << event->jaxis.axis);
-				}
-				setKeyState(key, NEBU_INPUT_KEYSTATE_DOWN);
-				if(current && current->keyboard)
-					current->keyboard(NEBU_INPUT_KEYSTATE_DOWN, key, 0, 0);
-			} else {
-				// do nothing
-			}
-		}
-		break;
-				 
-#if 0
-		if (abs(event->jaxis.value) <= joystick_threshold * SYSTEM_JOY_AXIS_MAX) {
-			skip_axis_event &= ~(1 << event->jaxis.axis);
-			break;
-		}
-		if(skip_axis_event & (1 << event->jaxis.axis))
-			break;
-		skip_axis_event |= 1 << event->jaxis.axis;
-		key = SYSTEM_JOY_LEFT + event->jaxis.which * SYSTEM_JOY_OFFSET;
-		if(event->jaxis.axis == 1)
-			key += 2;
-		if(event->jaxis.value > 0)
-			key++;
-		setKeyState(key, NEBU_INPUT_KEYSTATE_DOWN);
-		if(current && current->keyboard)
-			current->keyboard(NEBU_INPUT_KEYSTATE_DOWN, key, 0, 0);
-		break;
-#endif
-	case SDL_JOYBUTTONDOWN:
-	case SDL_JOYBUTTONUP:
-		if(event->type == SDL_JOYBUTTONDOWN)
-			state = NEBU_INPUT_KEYSTATE_DOWN;
-		else
-			state = NEBU_INPUT_KEYSTATE_UP;
-		
-		key = SYSTEM_JOY_BUTTON_0 + event->jbutton.button +
-			SYSTEM_JOY_OFFSET * event->jbutton.which;
+	case SDL_EVENT_KEY_DOWN:
+	case SDL_EVENT_KEY_UP:
+		state = (event->type == SDL_EVENT_KEY_DOWN) ?
+			NEBU_INPUT_KEYSTATE_DOWN : NEBU_INPUT_KEYSTATE_UP;
+
+		key = event->key.key;
 		setKeyState(key, state);
 		if(current && current->keyboard)
 			current->keyboard(state, key, 0, 0);
 		break;
-	case SDL_MOUSEBUTTONDOWN:
-	case SDL_MOUSEBUTTONUP:
-		SystemMouse(event->button.button, event->button.state, 
-			event->button.x, event->button.y);
+	case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
+		int joy_index = findJoystickIndex(event->jaxis.which);
+		if(joy_index < 0 || joy_index >= MAX_SUPPORTED_JOYSTICKS)
+			break;
+
+		if(abs(event->jaxis.value) <= joystick_threshold * SYSTEM_JOY_AXIS_MAX) {
+			if(joy_axis_state[joy_index] & (1 << event->jaxis.axis)) {
+				joy_axis_state[joy_index] &= ~(1 << event->jaxis.axis);
+				key = SYSTEM_JOY_LEFT + joy_index * SYSTEM_JOY_OFFSET;
+				if(event->jaxis.axis == 1)
+					key += 2;
+				if(joy_lastaxis[joy_index] & (1 << event->jaxis.axis))
+					key++;
+				setKeyState(key, NEBU_INPUT_KEYSTATE_UP);
+				if(current && current->keyboard)
+					current->keyboard(NEBU_INPUT_KEYSTATE_UP, key, 0, 0);
+			}
+		} else {
+			if(!(joy_axis_state[joy_index] & (1 << event->jaxis.axis))) {
+				joy_axis_state[joy_index] |= (1 << event->jaxis.axis);
+				key = SYSTEM_JOY_LEFT + joy_index * SYSTEM_JOY_OFFSET;
+				if(event->jaxis.axis == 1)
+					key += 2;
+				if(event->jaxis.value > 0) {
+					key++;
+					joy_lastaxis[joy_index] |= (1 << event->jaxis.axis);
+				} else {
+					joy_lastaxis[joy_index] &= ~(1 << event->jaxis.axis);
+				}
+				setKeyState(key, NEBU_INPUT_KEYSTATE_DOWN);
+				if(current && current->keyboard)
+					current->keyboard(NEBU_INPUT_KEYSTATE_DOWN, key, 0, 0);
+			}
+		}
 		break;
-	case SDL_MOUSEMOTION:
-		SystemMouseMotion(event->motion.x, event->motion.y);
-		mouse_rel_x += event->motion.xrel;
-		mouse_rel_y += event->motion.yrel;
+	}
+	case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+	case SDL_EVENT_JOYSTICK_BUTTON_UP: {
+		int joy_index = findJoystickIndex(event->jbutton.which);
+		if(joy_index < 0 || joy_index >= MAX_SUPPORTED_JOYSTICKS)
+			break;
+		state = event->jbutton.down ? NEBU_INPUT_KEYSTATE_DOWN : NEBU_INPUT_KEYSTATE_UP;
+		key = SYSTEM_JOY_BUTTON_0 + event->jbutton.button +
+			SYSTEM_JOY_OFFSET * joy_index;
+		setKeyState(key, state);
+		if(current && current->keyboard)
+			current->keyboard(state, key, 0, 0);
+		break;
+	}
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+	case SDL_EVENT_MOUSE_BUTTON_UP:
+		SystemMouse(event->button.button,
+			event->button.down ? SYSTEM_MOUSEPRESSED : SYSTEM_MOUSERELEASED,
+			(int)event->button.x,
+			(int)event->button.y);
+		break;
+	case SDL_EVENT_MOUSE_MOTION:
+		SystemMouseMotion((int)event->motion.x, (int)event->motion.y);
+		mouse_rel_x += (int)event->motion.xrel;
+		mouse_rel_y += (int)event->motion.yrel;
+		break;
+	default:
 		break;
 	}
 }

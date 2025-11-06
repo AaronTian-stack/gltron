@@ -8,9 +8,11 @@ namespace Sound {
   System::System(SDL_AudioSpec *spec) { 
     _spec = spec;
 
+#if 0
     _info.format = _spec->format;
     _info.rate = spec->freq;
     _info.channels = spec->channels;
+#endif
     
     _mix_music = 1; // TODO: add 'master' volume for music and fx
     _mix_fx = 1;

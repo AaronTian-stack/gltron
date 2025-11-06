@@ -5,9 +5,11 @@
 
 void nebu_Audio_Init(void)
 {
-	if(SDL_Init(SDL_INIT_AUDIO) < 0 ){
-		fprintf(stderr, "Couldn't initialize SDL audio: %s\n", SDL_GetError());
-		/* FIXME: disable sound system */
+	if(!(SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO)) {
+		if(!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
+			fprintf(stderr, "Couldn't initialize SDL audio: %s\n", SDL_GetError());
+			/* FIXME: disable sound system */
+		}
 	}
 }
 

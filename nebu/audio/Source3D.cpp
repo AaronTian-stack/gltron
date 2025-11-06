@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include "audio/nebu_Source3D.h"
 
 #include "base/nebu_assert.h"
