@@ -1,4 +1,4 @@
-#if 0
+#if 1
 #include "audio/sound_glue.h"
 extern "C" {
 #include "game/game.h"
